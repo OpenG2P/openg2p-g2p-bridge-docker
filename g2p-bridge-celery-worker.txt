@@ -1,5 +1,5 @@
 # g2p-bridge-celery-worker.txt
-#!openg2p/g2p-bridge-celery-worker:2.0.0
+#!psnappz/g2p-bridge-celery-worker:2.0.0
 #!Dockerfile.workers
 #!.
 # adapters (examples; adjust refs/branches/tags as needed)
