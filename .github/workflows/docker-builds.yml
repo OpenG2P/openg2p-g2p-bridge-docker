@@ -70,11 +70,11 @@ jobs:
             exit 1
           fi
 
-          IMAGE_ID="${LINES}"
-          DOCKERFILE="${LINES[21]}"
+          IMAGE_ID="${LINES[0]}"
+          DOCKERFILE="${LINES[1]}"
           CONTEXT="."
-          if [ "${#LINES[@]}" -ge 3 ] && [ -n "${LINES[22]}" ]; then
-            CONTEXT="${LINES[22]}"
+          if [ "${#LINES[@]}" -ge 3 ] && [ -n "${LINES[2]}" ]; then
+            CONTEXT="${LINES[2]}"
           fi
 
           # Remaining lines are optional dependencies
