@@ -1,0 +1,77 @@
+name: OpenG2P FastAPI Dockers (matrix + deps)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        serviceFile:
+          - g2p-bridge-api.txt
+          - g2p-bridge-celery-worker.txt
+          - g2p-bridge-celery-beat.txt
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker Login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.docker_hub_actor }}
+          password: ${{ secrets.docker_hub_token }}
+
+      - name: Read service file and prepare adapters requirements
+        id: read
+        shell: bash
+        run: |
+          file="${{ matrix.serviceFile }}"
+          [ -f "$file" ] || { echo "Service file not found: $file" >&2; exit 1; }
+
+          IMAGE_ID=$(sed -n '1{s/^#\\!//;p}' "$file")
+          DOCKERFILE=$(sed -n '2{s/^#\\!//;p}' "$file")
+          CONTEXT=$(sed -n '3{s/^#\\!//;p}' "$file"); [ -z "$CONTEXT" ] && CONTEXT="."
+
+          [ -n "$IMAGE_ID" ] && [ -n "$DOCKERFILE" ] || { echo "Invalid file format" >&2; exit 1; }
+
+          # Lines 4+ are optional dependencies (VCS or PyPI), write to adapters.requirements.txt
+          awk 'NR>=4 {sub(/^#!/,""); if (length($0)>0) print}' "$file" > adapters.requirements.txt
+
+          echo "image=$IMAGE_ID" >> "$GITHUB_OUTPUT"
+          echo "dockerfile=$DOCKERFILE" >> "$GITHUB_OUTPUT"
+          echo "context=$CONTEXT" >> "$GITHUB_OUTPUT"
+          echo "created=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> "$GITHUB_OUTPUT"
+          echo "commit=$(git --no-pager log -1 --pretty=format:%H)" >> "$GITHUB_OUTPUT"
+          echo "vendor=$(printf "%s" "$IMAGE_ID" | cut -d'/' -f1)" >> "$GITHUB_OUTPUT"
+          echo "title=$(printf "%s" "$IMAGE_ID" | cut -d'/' -f2 | cut -d':' -f1)" >> "$GITHUB_OUTPUT"
+          echo "version=$(printf "%s" "$IMAGE_ID" | cut -d':' -f2)" >> "$GITHUB_OUTPUT"
+
+          echo "---- adapters.requirements.txt ----"
+          cat adapters.requirements.txt || true
+          echo "----------------------------------"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ steps.read.outputs.context }}
+          file: ${{ steps.read.outputs.dockerfile }}
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.read.outputs.image }}
+          labels: |
+            org.opencontainers.image.created=${{ steps.read.outputs.created }}
+            org.opencontainers.image.authors=${{ github.repository_owner }}
+            org.opencontainers.image.source=${{ github.repository }}@${{ steps.read.outputs.commit }}
+            org.opencontainers.image.version=${{ steps.read.outputs.version }}
+            org.opencontainers.image.revision=${{ steps.read.outputs.commit }}
+            org.opencontainers.image.vendor=${{ steps.read.outputs.vendor }}
+            org.opencontainers.image.title=${{ steps.read.outputs.title }}
+            org.opencontainers.image.description=G2P Bridge FastAPI service image

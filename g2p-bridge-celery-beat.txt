@@ -1,0 +1,6 @@
+# g2p-bridge-celery-beat.txt
+#!openg2p/g2p-bridge-celery-beat:1.1.0
+#!Dockerfile.producers
+#!.
+# Optional dependencies for beat:
+git+https://github.com/PSNAppz/openg2p-g2p-bridge-adapters@main#subdirectory=openg2p-g2p-bridge-bank-connectors

@@ -1,0 +1,43 @@
+FROM python:3.12.11-alpine3.22
+
+ARG container_user=openg2p
+ARG container_user_group=openg2p
+ARG container_user_uid=1001
+ARG container_user_gid=1001
+
+RUN apk add --no-cache --virtual .build-deps gcc libc-dev linux-headers make \
+ && apk add --no-cache bash git gettext libpq-dev
+
+RUN addgroup -g ${container_user_gid} ${container_user_group} \
+  && adduser -D -u ${container_user_uid} -G ${container_user_group} -s /bin/bash ${container_user}
+
+WORKDIR /app
+
+# Always from openg2p-g2p-bridge repo (this repo)
+ADD openg2p-g2p-bridge-models /app/openg2p-g2p-bridge-models
+ADD openg2p-g2p-bridge-celery-workers /app/openg2p-g2p-bridge-celery-workers
+ADD openg2p-g2p-bridge-agency-allocator /app/openg2p-g2p-bridge-agency-allocator
+ADD openg2p-g2p-bridge-warehouse-allocator /app/openg2p-g2p-bridge-warehouse-allocator
+RUN mv /app/openg2p-g2p-bridge-celery-workers/main.py /app
+
+# Common libs
+RUN python3 -m pip install --no-cache-dir git+https://github.com/openg2p/openg2p-fastapi-common@1.1#subdirectory=openg2p-fastapi-common \
+ && python3 -m pip install --no-cache-dir git+https://github.com/openg2p/openg2p-g2pconnect-common-lib@1.1#subdirectory=openg2p-g2pconnect-common-lib \
+ && python3 -m pip install --no-cache-dir git+https://github.com/openg2p/openg2p-g2pconnect-common-lib@1.1#subdirectory=openg2p-g2pconnect-mapper-lib
+
+# Dynamic adapters (from workflow-generated adapters.requirements.txt)
+COPY adapters.requirements.txt /tmp/adapters.requirements.txt
+RUN if [ -s /tmp/adapters.requirements.txt ]; then python3 -m pip install --no-cache-dir -r /tmp/adapters.requirements.txt; fi
+
+# Local editable installs
+RUN python3 -m pip install -e /app/openg2p-g2p-bridge-models \
+    -e /app/openg2p-g2p-bridge-agency-allocator \
+    -e /app/openg2p-g2p-bridge-warehouse-allocator \
+    -e /app/openg2p-g2p-bridge-celery-workers
+
+RUN apk del --no-network .build-deps
+
+USER ${container_user}
+ENV PYTHONUNBUFFERED=1
+
+CMD celery -A main.celery_app worker -Q g2p_bridge_celery_worker_tasks --loglevel=debug
