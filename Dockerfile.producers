@@ -7,26 +7,20 @@ RUN apk add --no-cache --virtual .build-deps gcc libc-dev linux-headers make \
 
 WORKDIR /app
 
-# Core libs
-RUN pip install --no-cache-dir git+https://github.com/openg2p/openg2p-fastapi-common@1.1#subdirectory=openg2p-fastapi-common \
- && pip install --no-cache-dir git+https://github.com/openg2p/openg2p-g2pconnect-common-lib@1.1#subdirectory=openg2p-g2pconnect-common-lib
-
-# Always from openg2p-g2p-bridge repo (no local installs)
-# Update pip and setuptools first
-RUN pip install --no-cache-dir --upgrade pip setuptools
-
-# Install models first (known to work)
-RUN pip install --no-cache-dir \
-    "git+https://github.com/PSNAppz/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-models"
-
-# Install celery beat producers separately for better error isolation
-RUN pip install --no-cache-dir \
-    "git+https://github.com/PSNAppz/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-celery-beat-producers"
-
 # Dynamic adapters for beat (optional)
 COPY adapters.requirements.txt /tmp/adapters.requirements.txt
 RUN if [ -s /tmp/adapters.requirements.txt ]; then pip install --no-cache-dir -r /tmp/adapters.requirements.txt; fi
 
+# Install all Python packages in one layer for better caching and speed
+# Use --parallel-builds for faster git cloning and building
+RUN pip install --upgrade pip setuptools && \
+    pip install --disable-pip-version-check \
+        git+https://github.com/openg2p/openg2p-fastapi-common@1.1#subdirectory=openg2p-fastapi-common \
+        git+https://github.com/openg2p/openg2p-g2pconnect-common-lib@1.1#subdirectory=openg2p-g2pconnect-common-lib \
+        "git+https://github.com/PSNAppz/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-models" \
+        "git+https://github.com/PSNAppz/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-celery-beat-producers"
+
+# Clean up build dependencies early to reduce image size
 RUN apk del --no-network .build-deps
 
 ENV PYTHONUNBUFFERED=1

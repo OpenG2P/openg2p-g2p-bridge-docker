@@ -6,3 +6,5 @@
 git+https://github.com/PSNAppz/openg2p-g2p-bridge-adapters@2.0#subdirectory=openg2p-g2p-bridge-bank-connectors
 git+https://github.com/PSNAppz/openg2p-g2p-bridge-adapters@2.0#subdirectory=openg2p-g2p-bridge-geo-resolver
 git+https://github.com/PSNAppz/openg2p-g2p-bridge-adapters@2.0#subdirectory=openg2p-g2p-bridge-notification-connectors
+git+https://github.com/PSNAppz/openg2p-g2p-bridge-adapters@2.0#subdirectory=openg2p-g2p-bridge-agency-allocator
+git+https://github.com/PSNAppz/openg2p-g2p-bridge-adapters@2.0#subdirectory=openg2p-g2p-bridge-warehouse-allocator
