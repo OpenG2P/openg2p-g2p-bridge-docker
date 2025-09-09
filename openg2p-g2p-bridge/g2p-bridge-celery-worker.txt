@@ -1,6 +1,6 @@
 # g2p-bridge-celery-worker.txt
 #!psnappz/g2p-bridge-celery-worker:2.0.0
-#!Dockerfile.workers
+#!openg2p-g2p-bridge/Dockerfile.workers
 #!.
 # adapters/dependencies (adjust refs/branches/tags as needed)
 git+https://github.com/PSNAppz/openg2p-g2p-bridge-adapters@2.0#subdirectory=openg2p-g2p-bridge-bank-connectors
