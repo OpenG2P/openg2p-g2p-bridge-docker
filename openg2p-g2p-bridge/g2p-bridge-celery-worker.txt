@@ -2,7 +2,7 @@
 #!psnappz/g2p-bridge-celery-worker:2.0.0
 #!Dockerfile.workers
 #!.
-# adapters (examples; adjust refs/branches/tags as needed)
+# adapters/dependencies (adjust refs/branches/tags as needed)
 git+https://github.com/PSNAppz/openg2p-g2p-bridge-adapters@2.0#subdirectory=openg2p-g2p-bridge-bank-connectors
 git+https://github.com/PSNAppz/openg2p-g2p-bridge-adapters@2.0#subdirectory=openg2p-g2p-bridge-geo-resolver
 git+https://github.com/PSNAppz/openg2p-g2p-bridge-adapters@2.0#subdirectory=openg2p-g2p-bridge-notification-connectors

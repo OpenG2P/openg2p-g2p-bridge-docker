@@ -1,4 +1,4 @@
-name: OpenG2P FastAPI Dockers (matrix + deps, robust)
+name: OpenG2P G2P Bridge Dockers
 
 on:
   workflow_dispatch: {}
