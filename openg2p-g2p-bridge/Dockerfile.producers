@@ -10,32 +10,13 @@ WORKDIR /app
 # Upgrade pip and install build tools first (cached layer)
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
-FROM base AS dependencies
-
-ARG G2P_REF=2.0
-
-# Create requirements file for better caching
-RUN echo "git+https://github.com/openg2p/openg2p-fastapi-common@1.1#subdirectory=openg2p-fastapi-common" > /tmp/core_requirements.txt && \
-    echo "git+https://github.com/openg2p/openg2p-g2pconnect-common-lib@1.1#subdirectory=openg2p-g2pconnect-common-lib" >> /tmp/core_requirements.txt && \
-    echo "git+https://github.com/psnappz/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-models" >> /tmp/core_requirements.txt && \
-    echo "git+https://github.com/psnappz/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-celery-beat-producers" >> /tmp/core_requirements.txt
+FROM base AS adapters
 
 # Configure git for faster clones and parallel processing
 RUN git config --global advice.detachedHead false && \
     git config --global init.defaultBranch main
 
-# Install core dependencies with optimizations
-RUN --mount=type=cache,target=/root/.cache/pip \
-    --mount=type=cache,target=/tmp/.git-cache \
-    PIP_PARALLEL_BUILDS=${PIP_PARALLEL_BUILDS:-4} pip install \
-    --disable-pip-version-check \
-    --no-warn-script-location \
-    --prefer-binary \
-    -r /tmp/core_requirements.txt
-
-FROM dependencies AS adapters
-
-# Copy and install adapter dependencies
+# Copy and install adapter dependencies FIRST (they contain core deps)
 COPY adapters.requirements.txt /tmp/adapters.requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=cache,target=/tmp/.git-cache \
@@ -47,7 +28,26 @@ RUN --mount=type=cache,target=/root/.cache/pip \
         -r /tmp/adapters.requirements.txt; \
     fi
 
-FROM adapters AS final
+FROM adapters AS dependencies
+
+ARG G2P_REF=2.0
+
+# Create requirements file for better caching
+RUN echo "git+https://github.com/openg2p/openg2p-fastapi-common@1.1#subdirectory=openg2p-fastapi-common" > /tmp/core_requirements.txt && \
+    echo "git+https://github.com/openg2p/openg2p-g2pconnect-common-lib@1.1#subdirectory=openg2p-g2pconnect-common-lib" >> /tmp/core_requirements.txt && \
+    echo "git+https://github.com/psnappz/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-models" >> /tmp/core_requirements.txt && \
+    echo "git+https://github.com/psnappz/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-celery-beat-producers" >> /tmp/core_requirements.txt
+
+# Install core dependencies with optimizations
+RUN --mount=type=cache,target=/root/.cache/pip \
+    --mount=type=cache,target=/tmp/.git-cache \
+    PIP_PARALLEL_BUILDS=${PIP_PARALLEL_BUILDS:-4} pip install \
+    --disable-pip-version-check \
+    --no-warn-script-location \
+    --prefer-binary \
+    -r /tmp/core_requirements.txt
+
+FROM dependencies AS final
 
 # Clean up build dependencies early to reduce image size
 RUN apk del --no-network .build-deps
