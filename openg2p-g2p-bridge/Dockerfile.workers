@@ -1,56 +1,26 @@
-# Multi-stage build for better caching
-FROM python:3.12.11-alpine3.22 AS base
+FROM python:3.12.11-alpine3.22
 
-# Install system dependencies in a separate layer
+ARG G2P_REF=2.0
+
 RUN apk add --no-cache --virtual .build-deps gcc libc-dev linux-headers make \
  && apk add --no-cache bash git gettext libpq-dev libffi-dev openssl-dev
 
 WORKDIR /app
 
-# Upgrade pip and install build tools first (cached layer)
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
-
-FROM base AS adapters
-
-# Configure git for faster clones and parallel processing
-RUN git config --global advice.detachedHead false && \
-    git config --global init.defaultBranch main
-
-# Copy and install adapter dependencies FIRST (they contain core deps)
+# Dynamic adapters from workflow (optional; e.g., bank/geo/notification connectors)
 COPY adapters.requirements.txt /tmp/adapters.requirements.txt
-RUN --mount=type=cache,target=/root/.cache/pip \
-    --mount=type=cache,target=/tmp/.git-cache \
-    if [ -s /tmp/adapters.requirements.txt ]; then \
-        PIP_PARALLEL_BUILDS=${PIP_PARALLEL_BUILDS:-4} pip install \
-        --disable-pip-version-check \
-        --no-warn-script-location \
-        --prefer-binary \
-        -r /tmp/adapters.requirements.txt; \
-    fi
+RUN if [ -s /tmp/adapters.requirements.txt ]; then pip install --no-cache-dir -r /tmp/adapters.requirements.txt; fi
 
-FROM adapters AS dependencies
+# Install all Python packages in one layer for better caching and speed
+# Use --parallel-builds for faster git cloning and building
+RUN pip install --upgrade pip setuptools && \
+    pip install --disable-pip-version-check \
+        git+https://github.com/openg2p/openg2p-fastapi-common@1.1#subdirectory=openg2p-fastapi-common \
+        git+https://github.com/openg2p/openg2p-g2pconnect-common-lib@1.1#subdirectory=openg2p-g2pconnect-common-lib \
+        git+https://github.com/openg2p/openg2p-g2pconnect-common-lib@1.1#subdirectory=openg2p-g2pconnect-mapper-lib \
+        "git+https://github.com/psnappz/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-models" \
+        "git+https://github.com/psnappz/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-celery-workers"
 
-ARG G2P_REF=2.0
-
-# Create requirements file for better caching
-RUN echo "git+https://github.com/openg2p/openg2p-fastapi-common@1.1#subdirectory=openg2p-fastapi-common" > /tmp/core_requirements.txt && \
-    echo "git+https://github.com/openg2p/openg2p-g2pconnect-common-lib@1.1#subdirectory=openg2p-g2pconnect-common-lib" >> /tmp/core_requirements.txt && \
-    echo "git+https://github.com/openg2p/openg2p-g2pconnect-common-lib@1.1#subdirectory=openg2p-g2pconnect-mapper-lib" >> /tmp/core_requirements.txt && \
-    echo "git+https://github.com/psnappz/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-models" >> /tmp/core_requirements.txt && \
-    echo "git+https://github.com/psnappz/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-celery-workers" >> /tmp/core_requirements.txt
-
-# Install core dependencies with optimizations
-RUN --mount=type=cache,target=/root/.cache/pip \
-    --mount=type=cache,target=/tmp/.git-cache \
-    PIP_PARALLEL_BUILDS=${PIP_PARALLEL_BUILDS:-4} pip install \
-    --disable-pip-version-check \
-    --no-warn-script-location \
-    --prefer-binary \
-    -r /tmp/core_requirements.txt
-
-FROM dependencies AS final
-
-# Clean up build dependencies
 RUN apk del --no-network .build-deps
 
 ENV PYTHONUNBUFFERED=1
