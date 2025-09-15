@@ -1,9 +1,8 @@
-# Multi-stage build for faster compilation and smaller final image
-FROM python:3.12.11-slim AS builder
+FROM python:3.12.11-slim
 
 ARG G2P_REF=2.0
 
-# Install build dependencies
+# Install build and runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
@@ -11,6 +10,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     libmagic-dev \
     git \
+    # Runtime dependencies
+    gettext \
+    libpq5 \
+    libmagic1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Set build optimizations
@@ -20,40 +23,35 @@ ENV PIP_COMPILE=1
 
 WORKDIR /app
 
-# Pre-install psycopg2-binary to avoid compilation
+# Pre-install psycopg2-binary and force it to be used instead of psycopg2
 RUN pip install --upgrade pip setuptools wheel && \
     pip install psycopg2-binary
 
+# Create constraints file to force psycopg2-binary usage
+RUN echo "psycopg2-binary" > /tmp/constraints.txt && \
+    echo "psycopg2==999999; sys_platform == \"impossible\"" >> /tmp/constraints.txt
+
+# Set constraint to prevent psycopg2 compilation
+ENV PIP_CONSTRAINT=/tmp/constraints.txt
+
 # Core libs
-RUN pip install git+https://github.com/psnappz/openg2p-fastapi-common@1.1#subdirectory=openg2p-fastapi-common \
+RUN pip install --constraint /tmp/constraints.txt git+https://github.com/psnappz/openg2p-fastapi-common@1.1#subdirectory=openg2p-fastapi-common \
     git+https://github.com/psnappz/openg2p-g2pconnect-common-lib@1.1#subdirectory=openg2p-g2pconnect-common-lib
 
 # Install bridge components
-RUN pip install \
+RUN pip install --constraint /tmp/constraints.txt \
     "git+https://github.com/psnappz/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-models" \
     "git+https://github.com/psnappz/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-api"
 
 # Dynamic deps from workflow (optional)
 COPY adapters.requirements.txt /tmp/adapters.requirements.txt
-RUN if [ -s /tmp/adapters.requirements.txt ]; then pip install -r /tmp/adapters.requirements.txt; fi
+RUN if [ -s /tmp/adapters.requirements.txt ]; then pip install --constraint /tmp/constraints.txt -r /tmp/adapters.requirements.txt; fi
 
-# Production stage - smaller runtime image
-FROM python:3.12.11-slim AS runtime
-
-ARG G2P_REF=2.0
-
-# Install only runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gettext \
-    libpq5 \
-    libmagic1 \
+# Clean up build dependencies to reduce image size
+RUN apt-get remove -y gcc g++ libc6-dev libpq-dev libmagic-dev git \
+    && apt-get autoremove -y \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-# Copy installed packages from builder stage
-COPY --from=builder /usr/local/lib/python3.12/site-packages/ /usr/local/lib/python3.12/site-packages/
-COPY --from=builder /usr/local/bin/ /usr/local/bin/
 
 ENV PYTHONUNBUFFERED=1
 ENV G2P_BRIDGE_NO_OF_WORKERS=2
