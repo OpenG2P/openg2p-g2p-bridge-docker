@@ -25,23 +25,15 @@ ENV PIP_COMPILE=1
 
 WORKDIR /app
 
-# Pre-install psycopg2-binary and force it to be used instead of psycopg2
-RUN pip install --upgrade pip setuptools wheel && \
-    pip install psycopg2-binary
-
-# Create constraints file to force psycopg2-binary usage
-RUN echo "psycopg2-binary" > /tmp/constraints.txt && \
-    echo "psycopg2==999999; sys_platform == \"impossible\"" >> /tmp/constraints.txt
-
-# Set constraint to prevent psycopg2 compilation
-ENV PIP_CONSTRAINT=/tmp/constraints.txt
+# Install pip and tools
+RUN pip install --upgrade pip setuptools wheel
 
 # Dynamic adapters for beat (optional)
 COPY adapters.requirements.txt /tmp/adapters.requirements.txt
-RUN if [ -s /tmp/adapters.requirements.txt ]; then pip install --constraint /tmp/constraints.txt -r /tmp/adapters.requirements.txt; fi
+RUN if [ -s /tmp/adapters.requirements.txt ]; then pip install -r /tmp/adapters.requirements.txt; fi
 
-# Install all Python packages with constraints to force psycopg2-binary
-RUN pip install --constraint /tmp/constraints.txt \
+# Install all Python packages
+RUN pip install \
         git+https://github.com/openg2p/openg2p-fastapi-common@1.1#subdirectory=openg2p-fastapi-common \
         git+https://github.com/openg2p/openg2p-g2pconnect-common-lib@1.1#subdirectory=openg2p-g2pconnect-common-lib \
         "git+https://github.com/psnappz/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-models" \
