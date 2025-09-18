@@ -1,5 +1,5 @@
 # g2p-bridge-api.txt
-#!openg2p/openg2p-g2p-bridge-api:2.0.0
+#!openg2p/openg2p-g2p-bridge-api:2.0.0-zambia-cfw
 #!openg2p-g2p-bridge/Dockerfile.api
 #!.
 # (no deps for API; leave empty below)
