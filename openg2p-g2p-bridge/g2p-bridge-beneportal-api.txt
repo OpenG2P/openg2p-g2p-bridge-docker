@@ -1,4 +1,4 @@
-# g2p-bridge-bene-portal-api.txt
+# g2p-bridge-beneportal-api.txt
 #!openg2p/openg2p-g2p-bridge-bene-portal-api:2.0.0
 #!openg2p-g2p-bridge/Dockerfile.beneportal.api
 #!.

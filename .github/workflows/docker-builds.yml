@@ -13,7 +13,7 @@ jobs:
           - openg2p-g2p-bridge/g2p-bridge-partner-api.txt
           - openg2p-g2p-bridge/g2p-bridge-celery-worker.txt
           - openg2p-g2p-bridge/g2p-bridge-celery-beat.txt
-           - openg2p-g2p-bridge/g2p-bridge-beneportal-api.txt
+          - openg2p-g2p-bridge/g2p-bridge-beneportal-api.txt
 
     steps:
       - uses: actions/checkout@v4
