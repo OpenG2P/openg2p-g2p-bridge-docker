@@ -3,9 +3,9 @@
 #!openg2p-g2p-bridge/Dockerfile.workers
 #!.
 # adapters/dependencies (adjust refs/branches/tags as needed)
-git+https://github.com/openg2p/openg2p-g2p-bridge-adapters@v2.0.0#subdirectory=openg2p-g2p-bridge-bank-connectors
-git+https://github.com/openg2p/openg2p-g2p-bridge-adapters@v2.0.0#subdirectory=openg2p-g2p-bridge-geo-resolver
-git+https://github.com/openg2p/openg2p-g2p-bridge-adapters@v2.0.0#subdirectory=openg2p-g2p-bridge-notification-connectors
-git+https://github.com/openg2p/openg2p-g2p-bridge-adapters@v2.0.0#subdirectory=openg2p-g2p-bridge-agency-allocator
-git+https://github.com/openg2p/openg2p-g2p-bridge-adapters@v2.0.0#subdirectory=openg2p-g2p-bridge-warehouse-allocator
-git+https://github.com/openg2p/openg2p-g2p-bridge-adapters@v2.0.0#subdirectory=openg2p-g2p-bridge-mapper-connectors
+git+https://github.com/openg2p/openg2p-g2p-bridge-adapters@2.0#subdirectory=openg2p-g2p-bridge-bank-connectors
+git+https://github.com/openg2p/openg2p-g2p-bridge-adapters@2.0#subdirectory=openg2p-g2p-bridge-geo-resolver
+git+https://github.com/openg2p/openg2p-g2p-bridge-adapters@2.0#subdirectory=openg2p-g2p-bridge-notification-connectors
+git+https://github.com/openg2p/openg2p-g2p-bridge-adapters@2.0#subdirectory=openg2p-g2p-bridge-agency-allocator
+git+https://github.com/openg2p/openg2p-g2p-bridge-adapters@2.0#subdirectory=openg2p-g2p-bridge-warehouse-allocator
+git+https://github.com/openg2p/openg2p-g2p-bridge-adapters@2.0#subdirectory=openg2p-g2p-bridge-mapper-connectors
