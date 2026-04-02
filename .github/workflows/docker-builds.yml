@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         serviceFile:
-          - openg2p-g2p-bridge/g2p-bridge-api.txt
+          - openg2p-g2p-bridge/g2p-bridge-partner-api.txt
           - openg2p-g2p-bridge/g2p-bridge-celery-worker.txt
           - openg2p-g2p-bridge/g2p-bridge-celery-beat.txt
 
