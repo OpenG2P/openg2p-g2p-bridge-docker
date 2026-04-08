@@ -11,7 +11,7 @@ WORKDIR /app
 RUN pip install --no-cache-dir openg2p-fastapi-common==1.1.4 \
     && pip install --no-cache-dir "git+https://github.com/openg2p/openg2p-fastapi-common@v1.1.4#subdirectory=openg2p-fastapi-auth-models" \
     && pip install --no-cache-dir "git+https://github.com/openg2p/openg2p-fastapi-common@v1.1.4#subdirectory=openg2p-fastapi-auth" \
-    && pip install --no-cache-dir "git+https://github.com/openg2p/openg2p-fastapi-common@v1.1.4#subdirectory=openg2p-fastapi-partner-auth" 
+    && pip install --no-cache-dir "git+https://github.com/psnappz/openg2p-fastapi-common@v1.1.4#subdirectory=openg2p-fastapi-partner-auth" 
 
 # Always from openg2p-g2p-bridge repo (no local installs)
 RUN pip install --no-cache-dir \
