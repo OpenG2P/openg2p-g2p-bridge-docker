@@ -8,7 +8,7 @@ RUN apk add --no-cache --virtual .build-deps gcc libc-dev linux-headers make \
 WORKDIR /app
 
 # Core libs (as in your current API Dockerfile)
-RUN pip install --no-cache-dir git+https://github.com/psnappz/openg2p-fastapi-common@1.1#subdirectory=openg2p-fastapi-common" \
+RUN pip install --no-cache-dir "git+https://github.com/psnappz/openg2p-fastapi-common@1.1#subdirectory=openg2p-fastapi-common" \
     && pip install --no-cache-dir "git+https://github.com/psnappz/openg2p-fastapi-common@1.1#subdirectory=openg2p-fastapi-auth-models" \
     && pip install --no-cache-dir "git+https://github.com/psnappz/openg2p-fastapi-common@1.1#subdirectory=openg2p-fastapi-auth" \
     && pip install --no-cache-dir "git+https://github.com/psnappz/openg2p-fastapi-common@1.1#subdirectory=openg2p-fastapi-partner-auth" 
