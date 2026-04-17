@@ -7,24 +7,21 @@ RUN apk add --no-cache --virtual .build-deps gcc libc-dev linux-headers make \
 
 WORKDIR /app
 
-# Dynamic adapters from workflow (optional; e.g., bank/geo/notification connectors)
+# Dynamic adapters for beat (optional)
 COPY adapters.requirements.txt /tmp/adapters.requirements.txt
 RUN if [ -s /tmp/adapters.requirements.txt ]; then pip install --no-cache-dir -r /tmp/adapters.requirements.txt; fi
 
-# Install all Python packages in one layer for better caching and speed
-# Use --parallel-builds for faster git cloning and building
 RUN pip install --upgrade pip setuptools && \
     pip install --disable-pip-version-check \
-        openg2p-fastapi-common==1.1.4 \
+        "git+https://github.com/openg2p/openg2p-fastapi-common@v1.1.5#subdirectory=openg2p-fastapi-common" \
         "git+https://github.com/openg2p/openg2p-fastapi-common@v1.1.5#subdirectory=openg2p-fastapi-auth-models" \
         "git+https://github.com/openg2p/openg2p-fastapi-common@v1.1.5#subdirectory=openg2p-fastapi-auth" \
         "git+https://github.com/openg2p/openg2p-fastapi-common@v1.1.5#subdirectory=openg2p-fastapi-partner-auth" \
-        "git+https://github.com/OpenG2P/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-models" \
-        "git+https://github.com/OpenG2P/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-celery-workers"
+        "git+https://github.com/openg2p/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-models" \
+        "git+https://github.com/openg2p/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-celery-beat-producers"
 
 RUN apk del --no-network .build-deps
 
 ENV PYTHONUNBUFFERED=1
 
-# Use module path for Celery app (no local main.py)
-CMD ["celery", "-A", "openg2p_g2p_bridge_celery_workers.main.celery_app", "worker", "-Q", "g2p_bridge_celery_worker_tasks", "--loglevel=info"]
+CMD ["celery", "-A", "openg2p_g2p_bridge_celery_beat_producers.main.celery_app", "worker", "--beat", "--loglevel=info", "--schedule=/tmp/celery-beat-schedule.db"]

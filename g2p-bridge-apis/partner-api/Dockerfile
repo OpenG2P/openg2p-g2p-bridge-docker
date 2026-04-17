@@ -11,7 +11,7 @@ WORKDIR /app
 RUN pip install --no-cache-dir "git+https://github.com/OpenG2P/openg2p-fastapi-common@v1.1.5#subdirectory=openg2p-fastapi-common" \
     && pip install --no-cache-dir "git+https://github.com/OpenG2P/openg2p-fastapi-common@v1.1.5#subdirectory=openg2p-fastapi-auth-models" \
     && pip install --no-cache-dir "git+https://github.com/OpenG2P/openg2p-fastapi-common@v1.1.5#subdirectory=openg2p-fastapi-auth" \
-    && pip install --no-cache-dir "git+https://github.com/OpenG2P/openg2p-fastapi-common@v1.1.5#subdirectory=openg2p-fastapi-partner-auth" 
+    && pip install --no-cache-dir "git+https://github.com/OpenG2P/openg2p-fastapi-common@v1.1.5#subdirectory=openg2p-fastapi-partner-auth"
 
 # Always from openg2p-g2p-bridge repo (no local installs)
 RUN pip install --no-cache-dir \
@@ -30,6 +30,5 @@ ENV G2P_BRIDGE_HOST=0.0.0.0
 ENV G2P_BRIDGE_PORT=8000
 ENV G2P_BRIDGE_WORKER_TYPE=gunicorn
 
-# Use module path for migrate and Gunicorn WSGI app
 CMD python3 -m openg2p_g2p_bridge_partner_api.main migrate; \
     gunicorn "openg2p_g2p_bridge_partner_api.main:app" --workers ${G2P_BRIDGE_NO_OF_WORKERS} --worker-class uvicorn.workers.UvicornWorker --bind ${G2P_BRIDGE_HOST}:${G2P_BRIDGE_PORT} --log-level info

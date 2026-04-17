@@ -1,5 +1,2 @@
-# g2p-bridge-api.txt
 #!openg2p/openg2p-g2p-bridge-partner-api:2.1.0
-#!openg2p-g2p-bridge/Dockerfile.partner.api
-#!.
 # (no deps for API; leave empty below)
