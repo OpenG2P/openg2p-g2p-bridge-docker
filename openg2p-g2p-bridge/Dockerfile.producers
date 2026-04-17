@@ -1,6 +1,6 @@
 FROM python:3.12.11-alpine3.22
 
-ARG G2P_REF=2.0
+ARG G2P_REF=v2.1.0
 
 RUN apk add --no-cache --virtual .build-deps gcc libc-dev linux-headers make \
  && apk add --no-cache bash git gettext libpq-dev libffi-dev openssl-dev
@@ -15,10 +15,10 @@ RUN if [ -s /tmp/adapters.requirements.txt ]; then pip install --no-cache-dir -r
 # Use --parallel-builds for faster git cloning and building
 RUN pip install --upgrade pip setuptools && \
     pip install --disable-pip-version-check \
-        openg2p-fastapi-common==1.1.4  \
-        "git+https://github.com/openg2p/openg2p-fastapi-common@v1.1.4#subdirectory=openg2p-fastapi-auth-models" \
-        "git+https://github.com/openg2p/openg2p-fastapi-common@v1.1.4#subdirectory=openg2p-fastapi-auth" \
-        "git+https://github.com/openg2p/openg2p-fastapi-common@v1.1.4#subdirectory=openg2p-fastapi-partner-auth" \
+        "git+https://github.com/openg2p/openg2p-fastapi-common@v1.1.5#subdirectory=openg2p-fastapi-common" \
+        "git+https://github.com/openg2p/openg2p-fastapi-common@v1.1.5#subdirectory=openg2p-fastapi-auth-models" \
+        "git+https://github.com/openg2p/openg2p-fastapi-common@v1.1.5#subdirectory=openg2p-fastapi-auth" \
+        "git+https://github.com/openg2p/openg2p-fastapi-common@v1.1.5#subdirectory=openg2p-fastapi-partner-auth" \
         "git+https://github.com/openg2p/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-models" \
         "git+https://github.com/openg2p/openg2p-g2p-bridge@${G2P_REF}#subdirectory=openg2p-g2p-bridge-celery-beat-producers"
 
