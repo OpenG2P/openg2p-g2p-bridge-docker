@@ -1,16 +1,16 @@
 FROM python:3.12.11-alpine3.22
 
-ARG G2P_REF=2.0
+ARG G2P_REF=v2.1.0
 
 RUN apk add --no-cache --virtual .build-deps gcc libc-dev linux-headers make \
  && apk add --no-cache bash git gettext libpq-dev libmagic
 
 WORKDIR /app
 
-# Core libs (as in your current API Dockerfile)
-RUN pip install --no-cache-dir openg2p-fastapi-common==1.1.4 \
-    && pip install --no-cache-dir "git+https://github.com/openg2p/openg2p-fastapi-common@v1.1.4#subdirectory=openg2p-fastapi-auth-models" \
-    && pip install --no-cache-dir "git+https://github.com/openg2p/openg2p-fastapi-common@v1.1.4#subdirectory=openg2p-fastapi-auth" 
+# Core libs
+RUN pip install --no-cache-dir "git+https://github.com/openg2p/openg2p-fastapi-common@v1.1.5#subdirectory=openg2p-fastapi-common" \
+    && pip install --no-cache-dir "git+https://github.com/openg2p/openg2p-fastapi-common@v1.1.5#subdirectory=openg2p-fastapi-auth-models" \
+    && pip install --no-cache-dir "git+https://github.com/openg2p/openg2p-fastapi-common@v1.1.5#subdirectory=openg2p-fastapi-auth"
 
 # Always from openg2p-g2p-bridge repo (no local installs)
 RUN pip install --no-cache-dir \
@@ -29,6 +29,5 @@ ENV G2P_BRIDGE_HOST=0.0.0.0
 ENV G2P_BRIDGE_PORT=8000
 ENV G2P_BRIDGE_WORKER_TYPE=gunicorn
 
-# Use module path for migrate and Gunicorn WSGI app
 CMD python3 -m openg2p_g2p_bridge_bene_portal_api.main migrate; \
-    gunicorn "openg2p_g2p_bridge_bene_portal_api.main:app" --workers ${G2P_BRIDGE_NO_OF_WORKERS} --worker-class uvicorn.workers.UvicornWorker --bind ${G2P_BRIDGE_HOST}:${G2P_BRIDGE_PORT}
+    gunicorn "openg2p_g2p_bridge_bene_portal_api.main:app" --workers ${G2P_BRIDGE_NO_OF_WORKERS} --worker-class uvicorn.workers.UvicornWorker --bind ${G2P_BRIDGE_HOST}:${G2P_BRIDGE_PORT} --log-level info
